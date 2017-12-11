@@ -24,7 +24,7 @@
                 <table class="input_table">
                     <tr>
                         <td>
-                            <label for="signup-email">Email: </label>
+                            <label for="signup-email">email: </label>
                         </td>
                         <td>
                             <input v-model="email" type="email" id="signup-email">
@@ -32,7 +32,7 @@
                     </tr>
                     <tr>
                         <td>
-                            <label for="signup-first">First name: </label>
+                            <label for="signup-first">first name: </label>
                         </td>
                         <td>
                             <input v-model="first" type="text" id="signup-first">
@@ -40,7 +40,7 @@
                     </tr>
                     <tr>
                         <td>
-                            <label for="signup-last">Last name: </label>
+                            <label for="signup-last">last name: </label>
                         </td>
                         <td>
                             <input v-model="last" type="text" id="signup-last">
@@ -48,7 +48,7 @@
                     </tr>
                     <tr>
                         <td>
-                            <label for="signup-password">Password: </label>
+                            <label for="signup-password">password: </label>
                         </td>
                         <td>
                             <input v-model="password" type="password" id="signup-password">
@@ -56,7 +56,7 @@
                     </tr>
                     <tr>
                         <td>
-                            <label for="signup-confirm">Confirm Password: </label>
+                            <label for="signup-confirm">confirm password: </label>
                         </td>
                         <td>
                             <input v-model="confirm" type="password" id="signup-confirm">
@@ -64,7 +64,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <button v-on:click="signUp()">Sign Up</button>
+                            <button v-on:click="signUp()">sign Up</button>
                         </td>
                     </tr>
                     <tr>
@@ -80,7 +80,7 @@
                 <table class="input_table">
                     <tr>
                         <td>
-                            <label for="signin-email">Email:</label>
+                            <label for="signin-email">email:</label>
                         </td>
                         <td>
                             <input v-model="email" type="email" id="signin-email">
@@ -88,7 +88,7 @@
                     </tr>
                     <tr>
                         <td>
-                            <label for="signin-password">Password:</label>
+                            <label for="signin-password">password:</label>
                         </td>
                         <td>
                             <input v-model="password" type="password" id="signin-password">
@@ -96,7 +96,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <button v-on:click="signIn()">Sign in</button>
+                            <button v-on:click="signIn()">sign in</button>
                         </td>
                     </tr>
                     <tr>
@@ -115,7 +115,7 @@
                     </tr>
                     <tr>
                         <td>
-                            <a href="javascript:void(0)" v-on:click="page='default'">Back</a>
+                            <a href="javascript:void(0)" v-on:click="page='default'">back</a>
                         </td>
                     </tr>
                 </table>
@@ -124,12 +124,12 @@
                 <table class="input_table">
                     <tr>
                         <td>
-                            <p>list to be added</p>
+                            <p>current: {{currentList}}</p>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <a href="javascript:void(0)" v-on:click="page='default'">Back</a>
+                            <a href="javascript:void(0)" v-on:click="page='default'">back</a>
                         </td>
                     </tr>
                 </table>
@@ -143,7 +143,7 @@
                     </tr>
                     <tr>
                         <td>
-                            <a href="javascript:void(0)" v-on:click="page='default'">Back</a>
+                            <a href="javascript:void(0)" v-on:click="page='default'">back</a>
                         </td>
                     </tr>
                 </table>
@@ -152,22 +152,30 @@
                 <table class="input_table">
                     <tr>
                         <td>
-                            <button v-on:click="page='create'">Create List</button>
+                            <button v-on:click="createList()">Create List</button>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="page='list'">View List</button>
+                            <select v-model="currentList">
+                                <option value="" disabled>select a list</option>
+                                <option v-for="list in lists">{{list.name}}</option>
+                            </select>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="page='invites'">See Invites</button>
+                            <button v-on:click="viewList()">View Selected List</button>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <a href="javascript:void(0)" v-on:click="signOutUser()">Sign Out</a>
+                            <button v-on:click="viewInvites()">See Invites</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="javascript:void(0)" v-on:click="signOutUser()">sign out</a>
                         </td>
                     </tr>
                 </table>

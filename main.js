@@ -111,8 +111,24 @@ Vue.component('main-menu-page', {
     data: function () {
         return {}
     },
+    methods: {
+        createList: function() {
+            vm.page='create'
+        },
+        viewList: function() {
+            if (vm.currentList === '') {
+                vm.error = 'must select a list'
+                return
+            }
+            vm.page='list'
+        },
+        viewInvites: function() {
+            vm.page='invites'
+        }
+    },
     mounted: function () {
         console.log('main menu mounted')
+        vm.currentList = ''
     }
 })
 
@@ -122,13 +138,16 @@ var vm = new Vue({
     data: {
         page: 'default',
         auth: false,
-        error: ''
+        error: '',
+        currentList: '',
+        lists: [new List(new User('f','l','e@e.e'),'list 1', [1,2,3]), new List(new User('f2', 'l2', 'e@2'), 'list 2', [4,5,6])],
+        invites: null
     },
     methods: {
         signInUser: function (email, password) {
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then(function() {
-                    console.log('sign in success!')
+                    console.log('sign in success! ' + firebase.auth().currentUser.email)
                 })
                 .catch(function (error) {
                     vm.error = error.message
@@ -137,7 +156,9 @@ var vm = new Vue({
         signUpUser: function (first, last, email, password) {
             firebase.auth().createUserWithEmailAndPassword(email, password)
             .then(function() {
-                console.log('sign up success! ' + first + ' ' + last)
+                var path = 'users/' + emailToKey(email)
+                firebase.database().ref(path).set({first: first, last: last, email: email})
+                console.log('sign up success! ' + firebase.auth().currentUser.email)
             }).catch(function(error) {
                 vm.error = error.message
             })
@@ -173,3 +194,29 @@ var vm = new Vue({
         })
     }
 })
+
+function List(user, name, items) {
+    this.user = user
+    this.name = name
+    this.items = items
+}
+
+function ListItem(user, name) {
+    this.user = user
+    this.name = name
+}
+
+function User(first, last, email) {
+    this.first = first
+    this.last = last
+    this.email = email
+}
+
+function Invite(userFrom, listName) {
+    this.userFrom = userFrom
+    this.listName = listName
+}
+
+function emailToKey(email) {
+    return email.replace(/[.]/g, '%20');
+}
