@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Perry Kaufman">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ListShare</title>
+    <script src="https://www.gstatic.com/firebasejs/4.8.0/firebase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <link rel="stylesheet" href="main.css">
+    <script defer src="main.js"></script>
+</head>
+
+<body>
+    <div id="app" class="center_section">
+        <header>
+            <h1>ListShare</h1>
+            <h3>{{pageName}}</h3>
+            <span class="error_message">{{error}}</span>
+        </header>
+        <main>
+            <sign-up-page inline-template v-if="page === 'signup' && auth === false">
+                <table class="input_table">
+                    <tr>
+                        <td>
+                            <label for="signup-email">Email: </label>
+                        </td>
+                        <td>
+                            <input v-model="email" type="email" id="signup-email">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="signup-first">First name: </label>
+                        </td>
+                        <td>
+                            <input v-model="first" type="text" id="signup-first">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="signup-last">Last name: </label>
+                        </td>
+                        <td>
+                            <input v-model="last" type="text" id="signup-last">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="signup-password">Password: </label>
+                        </td>
+                        <td>
+                            <input v-model="password" type="password" id="signup-password">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="signup-confirm">Confirm Password: </label>
+                        </td>
+                        <td>
+                            <input v-model="confirm" type="password" id="signup-confirm">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <button v-on:click="signUp()">Sign Up</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <span>I already have an account</span>
+                            <br>
+                            <a href="javascript:void(0)" v-on:click="page='default'">sign in</a>
+                        </td>
+                    </tr>
+                </table>
+            </sign-up-page>
+            <sign-in-page inline-template v-else-if="auth === false">
+                <table class="input_table">
+                    <tr>
+                        <td>
+                            <label for="signin-email">Email:</label>
+                        </td>
+                        <td>
+                            <input v-model="email" type="email" id="signin-email">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="signin-password">Password:</label>
+                        </td>
+                        <td>
+                            <input v-model="password" type="password" id="signin-password">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <button v-on:click="signIn()">Sign in</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <a href="javascript:void(0)" v-on:click="page='signup'">create account</a>
+                        </td>
+                    </tr>
+                </table>
+            </sign-in-page>
+            <create-list-page inline-template v-if="page === 'create' && auth === true">
+                <table class="input_table">
+                    <tr>
+                        <td>
+                            <p>create list to be added</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="javascript:void(0)" v-on:click="page='default'">Back</a>
+                        </td>
+                    </tr>
+                </table>
+            </create-list-page>
+            <view-list-page inline-template v-else-if="page === 'list' && auth === true">
+                <table class="input_table">
+                    <tr>
+                        <td>
+                            <p>list to be added</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="javascript:void(0)" v-on:click="page='default'">Back</a>
+                        </td>
+                    </tr>
+                </table>
+            </view-list-page>
+            <view-invites-page inline-template v-else-if="page === 'invites' && auth === true">
+                <table class="input_table">
+                    <tr>
+                        <td>
+                            <p>invites to be added</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="javascript:void(0)" v-on:click="page='default'">Back</a>
+                        </td>
+                    </tr>
+                </table>
+            </view-invites-page>
+            <main-menu-page inline-template v-else-if="auth === true">
+                <table class="input_table">
+                    <tr>
+                        <td>
+                            <button v-on:click="page='create'">Create List</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button v-on:click="page='list'">View List</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button v-on:click="page='invites'">See Invites</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="javascript:void(0)" v-on:click="signOutUser()">Sign Out</a>
+                        </td>
+                    </tr>
+                </table>
+
+
+            </main-menu-page>
+        </main>
+        <footer>
+            <span>copyright Perry 2017</span>
+        </footer>
+    </div>
+</body>
+
+</html>

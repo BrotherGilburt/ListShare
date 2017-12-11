@@ -1,0 +1,36 @@
+body {
+    font-family: sans-serif;
+    background-color: darkgrey;
+    text-align: center;
+}
+
+label {
+    font-weight: bold;
+}
+
+h1 {
+    margin-bottom: 0;
+}
+
+h3 {
+    margin: 0;
+}
+
+.center_section {
+    background-color: white;
+    margin: auto;
+    max-width: 600px;
+    padding: 10px;
+}
+
+.error_message {
+    color: red;
+}
+
+.input_table {
+    margin: auto;
+}
+
+.input_table td {
+    padding: 5px;
+}
