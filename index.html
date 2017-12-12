@@ -20,6 +20,7 @@
             <span class="error_message">{{error}}</span>
         </header>
         <main>
+            <!-- SIGN UP -->
             <sign-up-page inline-template v-if="page === 'signup' && auth === false">
                 <table class="input_table">
                     <tr>
@@ -76,6 +77,8 @@
                     </tr>
                 </table>
             </sign-up-page>
+
+            <!-- SIGN IN -->
             <sign-in-page inline-template v-else-if="auth === false">
                 <table class="input_table">
                     <tr>
@@ -106,25 +109,50 @@
                     </tr>
                 </table>
             </sign-in-page>
+
+            <!-- CREATE LIST -->
             <create-list-page inline-template v-if="page === 'create' && auth === true">
                 <table class="input_table">
                     <tr>
                         <td>
-                            <p>create list to be added</p>
+                            <label for="create-name">list name:</label>
+                        </td>
+                        <td>
+                            <input v-model="name" type="text" id="create-name">
                         </td>
                     </tr>
                     <tr>
-                        <td>
+                        <td colspan="2">
+                            <button v-on:click="create()">Create</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
                             <a href="javascript:void(0)" v-on:click="page='default'">back</a>
                         </td>
                     </tr>
                 </table>
             </create-list-page>
+
+            <!-- LIST -->
             <view-list-page inline-template v-else-if="page === 'list' && auth === true">
                 <table class="input_table">
                     <tr>
-                        <td>
-                            <p>current: {{currentList}}</p>
+                        <td colspan="2"><h3>{{currentList.name}}</h3><span>created by {{listCreator}}</span></td>
+                    </tr>
+                    <tr v-for="item in currentList.items">
+                        <td colspan="2">
+                            <span v-bind:title="item.user.first">{{item.priority}} {{item.name}}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                           <input v-model="name" type="text" placeholder="new item">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <button v-on:click="add">add item</button>
                         </td>
                     </tr>
                     <tr>
@@ -134,6 +162,8 @@
                     </tr>
                 </table>
             </view-list-page>
+
+            <!-- INVITES -->
             <view-invites-page inline-template v-else-if="page === 'invites' && auth === true">
                 <table class="input_table">
                     <tr>
@@ -148,29 +178,31 @@
                     </tr>
                 </table>
             </view-invites-page>
+
+            <!-- MAIN MENU -->
             <main-menu-page inline-template v-else-if="auth === true">
                 <table class="input_table">
                     <tr>
                         <td>
-                            <button v-on:click="createList()">Create List</button>
+                            <button v-on:click="goToCreate()">Create List</button>
                         </td>
                     </tr>
                     <tr>
                         <td>
                             <select v-model="currentList">
                                 <option value="" disabled>select a list</option>
-                                <option v-for="list in lists">{{list.name}}</option>
+                                <option v-for="list in lists" v-bind:value="list">{{list.name}}</option>
                             </select>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="viewList()">View Selected List</button>
+                            <button v-on:click="goToList()">View Selected List</button>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="viewInvites()">See Invites</button>
+                            <button v-on:click="goToInvites()">See Invites</button>
                         </td>
                     </tr>
                     <tr>
@@ -179,8 +211,6 @@
                         </td>
                     </tr>
                 </table>
-
-
             </main-menu-page>
         </main>
         <footer>

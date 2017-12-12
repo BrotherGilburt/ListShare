@@ -79,7 +79,14 @@ Vue.component('sign-in-page', {
 //CREATE LIST
 Vue.component('create-list-page', {
     data: function () {
-        return {}
+        return {
+            name: ''
+        }
+    },
+    methods: {
+        create: function () {
+            vm.createList(this.name)
+        }
     },
     mounted: function () {
         console.log('create mounted')
@@ -89,10 +96,39 @@ Vue.component('create-list-page', {
 //VIEW LIST
 Vue.component('view-list-page', {
     data: function () {
-        return {}
+        return {
+            name: ''
+        }
+    },
+    methods: {
+        add: function () {
+            vm.addToCurrentList(this.name)
+            this.name = ''
+        },
+    },
+    computed: {
+        listCreator: function() {
+            if (vm.currentList.user == null) {
+                return 'you'
+            }
+            return vm.currentList.user.first
+        },
+        orderedList: function() {
+            if (vm.currentList.priority === true) {
+
+            }
+            return vm.currentList.items
+        }
     },
     mounted: function () {
         console.log('list mounted')
+        if (vm.currentList === '') {
+            vm.error = 'must select a list'
+            vm.page = 'default'
+            return
+        }
+        vm.completeCurrentList()
+        this.name = ''
     }
 })
 
@@ -112,22 +148,19 @@ Vue.component('main-menu-page', {
         return {}
     },
     methods: {
-        createList: function() {
-            vm.page='create'
+        goToCreate: function () {
+            vm.page = 'create'
         },
-        viewList: function() {
-            if (vm.currentList === '') {
-                vm.error = 'must select a list'
-                return
-            }
-            vm.page='list'
+        goToList: function () {
+            vm.page = 'list'
         },
-        viewInvites: function() {
-            vm.page='invites'
+        goToInvites: function () {
+            vm.page = 'invites'
         }
     },
     mounted: function () {
         console.log('main menu mounted')
+        vm.updateState()
         vm.currentList = ''
     }
 })
@@ -139,14 +172,18 @@ var vm = new Vue({
         page: 'default',
         auth: false,
         error: '',
+        first: '',
+        last: '',
         currentList: '',
-        lists: [new List(new User('f','l','e@e.e'),'list 1', [1,2,3]), new List(new User('f2', 'l2', 'e@2'), 'list 2', [4,5,6])],
-        invites: null
+        lists: [],
+        sharedLists: [],
+        invites: []
     },
     methods: {
         signInUser: function (email, password) {
             firebase.auth().signInWithEmailAndPassword(email, password)
-                .then(function() {
+                .then(function () {
+
                     console.log('sign in success! ' + firebase.auth().currentUser.email)
                 })
                 .catch(function (error) {
@@ -155,19 +192,133 @@ var vm = new Vue({
         },
         signUpUser: function (first, last, email, password) {
             firebase.auth().createUserWithEmailAndPassword(email, password)
-            .then(function() {
-                var path = 'users/' + emailToKey(email)
-                firebase.database().ref(path).set({first: first, last: last, email: email})
-                console.log('sign up success! ' + firebase.auth().currentUser.email)
-            }).catch(function(error) {
-                vm.error = error.message
-            })
+                .then(function () {
+                    var path = 'users/' + emailToKey(email)
+                    firebase.database().ref(path).set({
+                        name: {
+                            first: first,
+                            last: last
+                        },
+                        email: email
+                    })
+                    vm.first = first
+                    vm.last = last
+                    console.log('sign up success! ' + firebase.auth().currentUser.email)
+                }).catch(function (error) {
+                    vm.error = error.message
+                })
         },
         signOutUser: function () {
             firebase.auth().signOut()
+        },
+        updateState: function () {
+            this.setLists()
+            this.setShared()
+            this.setInvites()
+        },
+        createList: function (name) {
+            var path = 'users/' + emailToKey(this.getEmail()) + '/lists/' + name
+
+            firebase.database().ref(path).once('value').then(function (snapshot) {
+                if (snapshot.val() != null) {
+                    vm.error = 'list already exists'
+                    return
+                }
+                firebase.database().ref(path).set({
+                        items: 'empty'
+                    })
+                    .then(function () {
+                        vm.page = 'default'
+                    })
+                    .catch(function () {
+                        vm.error = 'list could not be created'
+                    })
+            })
+        },
+        setName: function () {
+            var path = 'users/' + emailToKey(vm.getEmail()) + '/name'
+            firebase.database().ref(path).once('value').then(function (snapshot) {
+                vm.first = snapshot.val().first
+                vm.last = snapshot.val().last
+            })
+        },
+        setLists: function () {
+            var path = 'users/' + emailToKey(this.getEmail()) + '/lists'
+            firebase.database().ref(path).once('value').then(function (snapshot) {
+                vm.lists = []
+                var lists = snapshot.val()
+                if (!lists) return
+                var names = Object.keys(lists)
+                for (var name in lists) {
+                    vm.lists.push(new List(null, name, null))
+                }
+            }).catch(function () {
+                console.log('error: could not get lists')
+            })
+        },
+        setShared: function () {
+
+        },
+        setInvites: function () {
+
+        },
+        getEmail: function () {
+            var current = firebase.auth().currentUser
+            if (current === null) return null
+            return current.email
+        },
+        completeCurrentList: function () {
+            if (this.currentList === '' || this.currentList == null) {
+                console.log('error: cannot complete invalid current list')
+                return
+            }
+            var path = 'users/'
+            if (this.currentList.user == null) {
+                path += emailToKey(this.getEmail())
+            } else {
+                path += emailToKey(this.currentList.user.email)
+            }
+            path += '/lists/' + this.currentList.name
+            firebase.database().ref(path).once('value').then(function (snapshot) {
+                var items = snapshot.val().items
+                if (items === 'empty' || items == null) {
+                    vm.currentList.items = []
+                } else {
+                    vm.currentList.items = items
+                }
+            }).catch(function () {
+                console.log('error: could not find currentList')
+            })
+        },
+        addToCurrentList: function (name) {
+            var path = 'users/'
+            if (this.currentList.user == null) {
+                path += emailToKey(this.getEmail())
+            } else {
+                path += emailToKey(this.currentList.user.email)
+            }
+            path += '/lists/' + this.currentList.name
+            var newItem = new ListItem(new User(vm.getEmail(), vm.first), name)
+            firebase.database().ref(path).once('value').then(function (snapshot) {
+                var items = snapshot.val().items
+                if (items === 'empty' || items === null) {
+                    vm.currentList.items = [newItem]
+                    firebase.database().ref(path).update({
+                        items: [newItem]
+                    })
+                } else {
+                    console.log(items)
+                    vm.currentList.items = items
+                    vm.currentList.items.push(newItem)
+                    firebase.database().ref(path + '/items').set(vm.currentList.items)
+                }
+            })
         }
     },
     computed: {
+        listOptions: function () {
+            return this.lists
+        },
         pageName: function () {
             if (this.page === 'signup') return 'Sign up'
             if (this.page === 'create') return 'Create List'
@@ -185,10 +336,9 @@ var vm = new Vue({
         firebase.auth().onAuthStateChanged(function (user) {
             if (user) {
                 vm.auth = true
-                vm.email = user.email
+                vm.setName()
             } else {
                 vm.auth = false
-                vm.email = null
             }
             vm.page = 'default'
         })
@@ -206,10 +356,9 @@ function ListItem(user, name) {
     this.name = name
 }
 
-function User(first, last, email) {
-    this.first = first
-    this.last = last
+function User(email, first) {
     this.email = email
+    this.first = first
 }
 
 function Invite(userFrom, listName) {
