@@ -86,7 +86,7 @@ Vue.component('create-list-page', {
     },
     methods: {
         create: function () {
-            vm.createList(this.name, (this.priority==='true')?true:false)
+            vm.createList(this.name, (this.priority === 'true') ? true : false)
         }
     },
     mounted: function () {
@@ -111,15 +111,21 @@ Vue.component('view-list-page', {
         },
     },
     computed: {
-        listCreator: function() {
+        listName: function () {
+            if (vm.currentList == null || vm.currentList === '') return 'N/A'
+            return vm.currentList.name
+        },
+        listCreator: function () {
             if (vm.currentList.user == null) {
                 return 'you'
             }
             return vm.currentList.user.first
         },
-        orderedItems: function() {
+        orderedItems: function () {
             if (vm.currentList.priority === true) {
-                vm.currentList.items.sort(function(a, b) {return b.priority - a.priority})
+                vm.currentList.items.sort(function (a, b) {
+                    return b.priority - a.priority
+                })
             }
             return vm.currentList.items
         }
@@ -127,12 +133,48 @@ Vue.component('view-list-page', {
     mounted: function () {
         console.log('list mounted')
         if (vm.currentList === '') {
+            vm.keep = true
             vm.error = 'must select a list'
             vm.page = 'default'
             return
         }
         vm.completeCurrentList()
         this.name = ''
+    }
+})
+
+//SEND INVITE
+Vue.component('send-invite-page', {
+    data: function () {
+        return {
+            email: ''
+        }
+    },
+    methods: {
+        send: function() {
+            vm.sendInvite(this.email, this.listName)
+        }
+    },
+    computed: {
+        listName: function () {
+            if (vm.currentList == null || vm.currentList === '') return 'N/A'
+            return vm.currentList.name
+        }
+    },
+    mounted: function () {
+        console.log('send invite mounted')
+        if (vm.currentList === '') {
+            vm.keep = true
+            vm.error = 'must select a list'
+            vm.page = 'default'
+            return
+        }
+        if (vm.currentList.user !== null) {
+            vm.keep = true
+            vm.error = 'can only send invites to your lists'
+            vm.page = 'default'
+            return
+        }
     }
 })
 
@@ -158,8 +200,17 @@ Vue.component('main-menu-page', {
         goToList: function () {
             vm.page = 'list'
         },
+        goToSendInvite: function () {
+            vm.page = 'sendInvite'
+        },
         goToInvites: function () {
             vm.page = 'invites'
+        }
+    },
+    computed: {
+        invitesSize: function () {
+            if (vm.invites == null) return 0
+            return vm.invites.length
         }
     },
     mounted: function () {
@@ -173,9 +224,12 @@ Vue.component('main-menu-page', {
 var vm = new Vue({
     el: '#app',
     data: {
+        lastID: 0,
+        keep: false,
         page: 'default',
         auth: false,
         error: '',
+        message: '',
         first: '',
         last: '',
         currentList: '',
@@ -320,6 +374,9 @@ var vm = new Vue({
                     firebase.database().ref(path + '/items').set(vm.currentList.items)
                 }
             })
+        },
+        sendInvite: function(name, email) {
+            console.log(name + email)
         }
     },
     computed: {
@@ -336,7 +393,12 @@ var vm = new Vue({
     },
     watch: {
         page: function () {
-            this.error = ''
+            if (this.keep === true) {
+                this.keep = false
+            } else {
+                this.error = ''
+            }
+            this.message = ''
         }
     },
     created: function () {
@@ -377,4 +439,8 @@ function Invite(userFrom, listName) {
 
 function emailToKey(email) {
     return email.replace(/[.]/g, '%20');
+}
+
+function keyToEmail(key) {
+    return key.replace(/(%20)/g, '.');
 }

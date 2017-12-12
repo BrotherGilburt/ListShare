@@ -146,7 +146,8 @@
             <view-list-page inline-template v-else-if="page === 'list' && auth === true">
                 <table class="input_table">
                     <tr>
-                        <td colspan="2"><h3>{{currentList.name}}</h3><span>created by {{listCreator}}</span></td>
+                        <td colspan="2"><h3>{{listName}}</h3>
+                            <span>created by {{listCreator}}</span></td>
                     </tr>
                     <tr v-for="item in orderedItems">
                         <td colspan="2" v-bind:title="item.user.first">
@@ -177,6 +178,43 @@
                 </table>
             </view-list-page>
 
+            <!-- SEND INVITE -->
+            <send-invite-page inline-template v-else-if="page === 'sendInvite' && auth === true">
+                <table class="input_table">
+                    <tr>
+                        <td>
+                            <h3>{{listName}}</h3>
+                            <span>created by you</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>Enter an email to invite to this list</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input v-model="email" type="text" placeholder="email">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button v-on:click="send()">send</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>{{message}}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="javascript:void(0)" v-on:click="page='default'">back</a>
+                        </td>
+                    </tr>
+                </table>
+            </send-invite-page>
+            
             <!-- INVITES -->
             <view-invites-page inline-template v-else-if="page === 'invites' && auth === true">
                 <table class="input_table">
@@ -211,12 +249,17 @@
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="goToList()">View Selected List</button>
+                            <button v-on:click="goToList()">view list</button>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="goToInvites()">See Invites</button>
+                            <button v-on:click="goToSendInvite()">invite to list</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button v-on:click="goToInvites()">See Invites ({{invitesSize}})</button>
                         </td>
                     </tr>
                     <tr>
