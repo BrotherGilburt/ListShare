@@ -80,12 +80,13 @@ Vue.component('sign-in-page', {
 Vue.component('create-list-page', {
     data: function () {
         return {
-            name: ''
+            name: '',
+            priority: 'false'
         }
     },
     methods: {
         create: function () {
-            vm.createList(this.name)
+            vm.createList(this.name, (this.priority==='true')?true:false)
         }
     },
     mounted: function () {
@@ -97,12 +98,15 @@ Vue.component('create-list-page', {
 Vue.component('view-list-page', {
     data: function () {
         return {
-            name: ''
+            name: '',
+            priority: 0
         }
     },
     methods: {
         add: function () {
-            vm.addToCurrentList(this.name)
+            console.log(this.priority)
+            if (this.priority == '' || this.priority < 0 || this.priority > 10) this.priority = 0
+            vm.addToCurrentList(this.name, this.priority)
             this.name = ''
         },
     },
@@ -113,9 +117,9 @@ Vue.component('view-list-page', {
             }
             return vm.currentList.user.first
         },
-        orderedList: function() {
+        orderedItems: function() {
             if (vm.currentList.priority === true) {
-
+                vm.currentList.items.sort(function(a, b) {return b.priority - a.priority})
             }
             return vm.currentList.items
         }
@@ -216,7 +220,7 @@ var vm = new Vue({
             this.setShared()
             this.setInvites()
         },
-        createList: function (name) {
+        createList: function (name, priority) {
             var path = 'users/' + emailToKey(this.getEmail()) + '/lists/' + name
 
             firebase.database().ref(path).once('value').then(function (snapshot) {
@@ -225,7 +229,8 @@ var vm = new Vue({
                     return
                 }
                 firebase.database().ref(path).set({
-                        items: 'empty'
+                        items: 'empty',
+                        priority: priority
                     })
                     .then(function () {
                         vm.page = 'default'
@@ -286,11 +291,13 @@ var vm = new Vue({
                 } else {
                     vm.currentList.items = items
                 }
+                vm.currentList.priority = snapshot.val().priority
+                console.log('priority: ' + snapshot.val().priority)
             }).catch(function () {
                 console.log('error: could not find currentList')
             })
         },
-        addToCurrentList: function (name) {
+        addToCurrentList: function (name, priority) {
             var path = 'users/'
             if (this.currentList.user == null) {
                 path += emailToKey(this.getEmail())
@@ -298,7 +305,7 @@ var vm = new Vue({
                 path += emailToKey(this.currentList.user.email)
             }
             path += '/lists/' + this.currentList.name
-            var newItem = new ListItem(new User(vm.getEmail(), vm.first), name)
+            var newItem = new ListItem(new User(vm.getEmail(), vm.first), name, priority)
             firebase.database().ref(path).once('value').then(function (snapshot) {
                 var items = snapshot.val().items
                 if (items === 'empty' || items === null) {
@@ -345,15 +352,17 @@ var vm = new Vue({
     }
 })
 
-function List(user, name, items) {
+function List(user, name, items, priority) {
     this.user = user
     this.name = name
     this.items = items
+    this.priority = priority
 }
 
-function ListItem(user, name) {
+function ListItem(user, name, priority) {
     this.user = user
     this.name = name
+    this.priority = priority
 }
 
 function User(email, first) {

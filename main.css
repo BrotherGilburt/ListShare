@@ -4,6 +4,10 @@ body {
     text-align: center;
 }
 
+header {
+    background-color: lightgray;
+}
+
 label {
     font-weight: bold;
 }
