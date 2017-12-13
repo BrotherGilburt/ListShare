@@ -151,7 +151,16 @@ Vue.component('send-invite-page', {
         }
     },
     methods: {
-        send: function() {
+        send: function () {
+            if (this.email === '') {
+                vm.error = 'email is required'
+                return
+            }
+            if (this.email === vm.getEmail()) {
+                vm.error = 'cannot invite yourself'
+                return
+            }
+            vm.error = ''
             vm.sendInvite(this.email, this.listName)
         }
     },
@@ -175,6 +184,7 @@ Vue.component('send-invite-page', {
             vm.page = 'default'
             return
         }
+        vm.message = ''
     }
 })
 
@@ -183,7 +193,19 @@ Vue.component('view-invites-page', {
     data: function () {
         return {}
     },
+    methods: {
+        accept: function (invite) {
+            vm.acceptInvite(invite)
+        }
+    },
+    computed: {
+        invitesDisplay: function () {
+            return vm.invites
+        }
+    },
     mounted: function () {
+        vm.setInvites()
+        vm.message = ''
         console.log('invites mounted')
     }
 })
@@ -224,7 +246,7 @@ Vue.component('main-menu-page', {
 var vm = new Vue({
     el: '#app',
     data: {
-        lastID: 0,
+        currentKey: 0,
         keep: false,
         page: 'default',
         auth: false,
@@ -238,6 +260,11 @@ var vm = new Vue({
         invites: []
     },
     methods: {
+        getKey: function () {
+            var key = this.currentKey
+            this.currentKey += 1
+            return key
+        },
         signInUser: function (email, password) {
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then(function () {
@@ -319,7 +346,20 @@ var vm = new Vue({
 
         },
         setInvites: function () {
+            var path = 'users/' + emailToKey(this.getEmail()) + '/invites'
 
+            firebase.database().ref(path).once('value').then(function (snapshot) {
+                vm.invites = []
+                var sources = snapshot.val()
+                if (sources === null) return
+                for (var source in sources) {
+                    var lists = Object.keys(sources[source])
+                    for (var i = 0; i < lists.length; i++) {
+                        var user = new User((sources[source])[lists[i]].email, (sources[source])[lists[i]].first)
+                        vm.invites.push(new Invite(user, lists[i]))
+                    }
+                }
+            })
         },
         getEmail: function () {
             var current = firebase.auth().currentUser
@@ -375,8 +415,48 @@ var vm = new Vue({
                 }
             })
         },
-        sendInvite: function(name, email) {
-            console.log(name + email)
+        sendInvite: function (email, name) {
+            console.log(emailToKey(email))
+
+            var path = 'users/' + emailToKey(email)
+            firebase.database().ref(path + '/name').once('value').then(function (snapshot) {
+                if (snapshot.val() === null) {
+                    vm.error = 'user not found'
+                    return
+                }
+                firebase.database().ref(path + '/invites/' + emailToKey(vm.getEmail()) + '/' + name).update({
+                    first: vm.first,
+                    email: vm.getEmail()
+                }).then(function () {
+                    vm.message = 'invite sent!'
+                }).catch(function () {
+                    vm.error = 'invite could not be sent'
+                })
+            }).catch(function () {
+                vm.error = 'user not found'
+            })
+        },
+        acceptInvite: function (invite) {
+            var path = 'users/' + emailToKey(this.getEmail()) + '/shared/' + emailToKey(invite.userFrom.email) + '/' + invite.listName
+            firebase.database().ref(path).update({
+                first: invite.userFrom.first,
+                email: invite.userFrom.email,
+                name: invite.listName
+            }).then(function() {
+                vm.removeInvite(invite)
+                vm.message = 'invite accepted'
+                vm.error = ''
+            }).catch(function() {
+                vm.message = ''
+                vm.error = 'invite could not be accepted'
+            })
+        },
+        removeInvite: function (invite) {
+            var path = 'users/' + emailToKey(this.getEmail()) + '/invites/' + emailToKey(invite.userFrom.email) + '/' + invite.listName
+            firebase.database().ref(path).remove().then(function() {
+                vm.error = ''
+                vm.setInvites()
+            })
         }
     },
     computed: {
@@ -419,22 +499,26 @@ function List(user, name, items, priority) {
     this.name = name
     this.items = items
     this.priority = priority
+    this.key = vm.getKey()
 }
 
 function ListItem(user, name, priority) {
     this.user = user
     this.name = name
     this.priority = priority
+    this.key = vm.getKey()
 }
 
 function User(email, first) {
     this.email = email
     this.first = first
+    this.key = vm.getKey()
 }
 
 function Invite(userFrom, listName) {
     this.userFrom = userFrom
     this.listName = listName
+    this.key = vm.getKey()
 }
 
 function emailToKey(email) {

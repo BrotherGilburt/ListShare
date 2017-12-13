@@ -218,13 +218,21 @@
             <!-- INVITES -->
             <view-invites-page inline-template v-else-if="page === 'invites' && auth === true">
                 <table class="input_table">
-                    <tr>
+                    <tr v-for="invite in invitesDisplay">
+                        <td v-bind:title="invite.userFrom.email">
+                            <b>{{invite.listName}}</b> from {{invite.userFrom.first}}
+                        </td>
                         <td>
-                            <p>invites to be added</p>
+                            <button v-on:click="accept(invite)">accept</button>
                         </td>
                     </tr>
                     <tr>
                         <td>
+                            <span>{{message}}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
                             <a href="javascript:void(0)" v-on:click="page='default'">back</a>
                         </td>
                     </tr>
@@ -236,7 +244,7 @@
                 <table class="input_table">
                     <tr>
                         <td>
-                            <button v-on:click="goToCreate()">Create List</button>
+                            <button v-on:click="goToCreate()">create List</button>
                         </td>
                     </tr>
                     <tr>
@@ -259,7 +267,7 @@
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="goToInvites()">See Invites ({{invitesSize}})</button>
+                            <button v-on:click="goToInvites()">see Invites ({{invitesSize}})</button>
                         </td>
                     </tr>
                     <tr>
