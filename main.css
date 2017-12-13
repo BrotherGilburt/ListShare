@@ -1,11 +1,13 @@
 body {
+    font-size: 20px;
     font-family: sans-serif;
     background-color: darkgrey;
     text-align: center;
 }
 
-header {
-    background-color: lightgray;
+header, footer {
+    background-color: rgb(228, 228, 228);
+    padding: 5px
 }
 
 label {
@@ -18,6 +20,43 @@ h1 {
 
 h3 {
     margin: 0;
+}
+
+select {
+    width: 80%;
+    font: inherit;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid darkblue;
+}
+
+input {
+    width: 80%;
+    font: inherit;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid darkblue;
+}
+
+button {
+    font: inherit;
+    background-color: lightblue;
+    border-radius: 5px;
+    border-style: none;
+    padding: 5px 10px;
+    margin: 1px;
+}
+
+button:hover {
+    margin: 0;
+    border: 1px solid darkblue;
+}
+
+a {
+    display: inline-block;
+    padding: 10px;
+    font-size: 24px;
+    color: darkblue;
 }
 
 .center_section {

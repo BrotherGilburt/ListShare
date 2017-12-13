@@ -45,7 +45,7 @@ Vue.component('sign-up-page', {
         }
     },
     mounted: function () {
-        console.log('signup mounted')
+
     }
 })
 
@@ -72,7 +72,7 @@ Vue.component('sign-in-page', {
         }
     },
     mounted: function () {
-        console.log('signin mounted')
+
     }
 })
 
@@ -81,16 +81,27 @@ Vue.component('create-list-page', {
     data: function () {
         return {
             name: '',
-            priority: 'false'
+            priority: 'false',
+            copy: ''
         }
     },
     methods: {
         create: function () {
-            vm.createList(this.name, (this.priority === 'true') ? true : false)
+            if (this.copy === '') {
+                vm.createList(this.name, (this.priority === 'true') ? true : false)
+            } else {
+                vm.copyList(this.name, (this.priority === 'true') ? true : false, this.copy)
+            }
+        }
+    },
+    computed: {
+        isShared: function () {
+            if (vm.sharedLists.length === 0) return false
+            return true
         }
     },
     mounted: function () {
-        console.log('create mounted')
+        vm.updateState
     }
 })
 
@@ -104,7 +115,10 @@ Vue.component('view-list-page', {
     },
     methods: {
         add: function () {
-            console.log(this.priority)
+            if (this.name === '') {
+                vm.error = 'an item name is required'
+                return
+            }
             if (this.priority == '' || this.priority < 0 || this.priority > 10) this.priority = 0
             vm.addToCurrentList(this.name, this.priority)
             this.name = ''
@@ -131,7 +145,6 @@ Vue.component('view-list-page', {
         }
     },
     mounted: function () {
-        console.log('list mounted')
         if (vm.currentList === '') {
             vm.keep = true
             vm.error = 'must select a list'
@@ -171,7 +184,6 @@ Vue.component('send-invite-page', {
         }
     },
     mounted: function () {
-        console.log('send invite mounted')
         if (vm.currentList === '') {
             vm.keep = true
             vm.error = 'must select a list'
@@ -196,6 +208,9 @@ Vue.component('view-invites-page', {
     methods: {
         accept: function (invite) {
             vm.acceptInvite(invite)
+        },
+        decline: function (invite) {
+            vm.removeInvite(invite)
         }
     },
     computed: {
@@ -206,7 +221,6 @@ Vue.component('view-invites-page', {
     mounted: function () {
         vm.setInvites()
         vm.message = ''
-        console.log('invites mounted')
     }
 })
 
@@ -233,10 +247,13 @@ Vue.component('main-menu-page', {
         invitesSize: function () {
             if (vm.invites == null) return 0
             return vm.invites.length
+        },
+        isShared: function () {
+            if (vm.sharedLists.length === 0) return false
+            return true
         }
     },
     mounted: function () {
-        console.log('main menu mounted')
         vm.updateState()
         vm.currentList = ''
     }
@@ -278,7 +295,7 @@ var vm = new Vue({
         signUpUser: function (first, last, email, password) {
             firebase.auth().createUserWithEmailAndPassword(email, password)
                 .then(function () {
-                    var path = 'users/' + emailToKey(email)
+                    var path = 'users/' + stringToKey(email)
                     firebase.database().ref(path).set({
                         name: {
                             first: first,
@@ -301,8 +318,15 @@ var vm = new Vue({
             this.setShared()
             this.setInvites()
         },
-        createList: function (name, priority) {
-            var path = 'users/' + emailToKey(this.getEmail()) + '/lists/' + name
+        createList: function (name, priority, listItems) {
+            if (name.indexOf('"') > -1) {
+                vm.error = 'quotation marks not allowed'
+                return
+            }
+            if (listItems == null || listItems == undefined) listItems = 'empty'
+            if (name === '') name = vm.formattedDate()
+
+            var path = 'users/' + stringToKey(this.getEmail()) + '/lists/' + stringToKey(name)
 
             firebase.database().ref(path).once('value').then(function (snapshot) {
                 if (snapshot.val() != null) {
@@ -310,7 +334,8 @@ var vm = new Vue({
                     return
                 }
                 firebase.database().ref(path).set({
-                        items: 'empty',
+                        name: name,
+                        items: listItems,
                         priority: priority
                     })
                     .then(function () {
@@ -321,42 +346,72 @@ var vm = new Vue({
                     })
             })
         },
+        copyList: function (name, priority, copy) {
+            var path = 'users/'
+            if (copy.user == null) {
+                path += stringToKey(this.getEmail())
+            } else {
+                path += stringToKey(copy.user.email)
+            }
+            path += '/lists/' + stringToKey(copy.name)
+            firebase.database().ref(path).once('value').then(function (snapshot) {
+                var items = snapshot.val().items
+                vm.createList(name, priority, items)
+            }).catch(function () {
+                console.log('error: could not find copylist')
+            })
+        },
         setName: function () {
-            var path = 'users/' + emailToKey(vm.getEmail()) + '/name'
+            var path = 'users/' + stringToKey(vm.getEmail()) + '/name'
             firebase.database().ref(path).once('value').then(function (snapshot) {
                 vm.first = snapshot.val().first
                 vm.last = snapshot.val().last
             })
         },
         setLists: function () {
-            var path = 'users/' + emailToKey(this.getEmail()) + '/lists'
+            var path = 'users/' + stringToKey(this.getEmail()) + '/lists'
             firebase.database().ref(path).once('value').then(function (snapshot) {
                 vm.lists = []
                 var lists = snapshot.val()
                 if (!lists) return
-                var names = Object.keys(lists)
-                for (var name in lists) {
-                    vm.lists.push(new List(null, name, null))
+                for (var list in lists) {
+                    var current = lists[list]
+                    vm.lists.push(new List(null, current.name, null))
                 }
             }).catch(function () {
                 console.log('error: could not get lists')
             })
         },
         setShared: function () {
+            var path = 'users/' + stringToKey(this.getEmail()) + '/shared'
 
+            firebase.database().ref(path).once('value').then(function (snapshot) {
+                vm.sharedLists = []
+                var sources = snapshot.val()
+                if (sources == null) return
+                for (email in sources) {
+                    var source = sources[email]
+                    for (listName in source) {
+                        var list = source[listName]
+                        var user = new User(list.email, list.first)
+                        vm.sharedLists.push(new List(user, list.name, null, null))
+                    }
+                }
+            })
         },
         setInvites: function () {
-            var path = 'users/' + emailToKey(this.getEmail()) + '/invites'
+            var path = 'users/' + stringToKey(this.getEmail()) + '/invites'
 
             firebase.database().ref(path).once('value').then(function (snapshot) {
                 vm.invites = []
                 var sources = snapshot.val()
-                if (sources === null) return
-                for (var source in sources) {
-                    var lists = Object.keys(sources[source])
-                    for (var i = 0; i < lists.length; i++) {
-                        var user = new User((sources[source])[lists[i]].email, (sources[source])[lists[i]].first)
-                        vm.invites.push(new Invite(user, lists[i]))
+                if (sources == null) return
+                for (var email in sources) {
+                    var source = sources[email]
+                    for (list in source) {
+                        var invite = source[list]
+                        var user = new User(invite.email, invite.first)
+                        vm.invites.push(new Invite(user, invite.name))
                     }
                 }
             })
@@ -373,11 +428,11 @@ var vm = new Vue({
             }
             var path = 'users/'
             if (this.currentList.user == null) {
-                path += emailToKey(this.getEmail())
+                path += stringToKey(this.getEmail())
             } else {
-                path += emailToKey(this.currentList.user.email)
+                path += stringToKey(this.currentList.user.email)
             }
-            path += '/lists/' + this.currentList.name
+            path += '/lists/' + stringToKey(this.currentList.name)
             firebase.database().ref(path).once('value').then(function (snapshot) {
                 var items = snapshot.val().items
                 if (items === 'empty' || items == null) {
@@ -386,47 +441,49 @@ var vm = new Vue({
                     vm.currentList.items = items
                 }
                 vm.currentList.priority = snapshot.val().priority
-                console.log('priority: ' + snapshot.val().priority)
             }).catch(function () {
                 console.log('error: could not find currentList')
             })
         },
-        addToCurrentList: function (name, priority) {
+        addToCurrentList: function (name, priority) {            
             var path = 'users/'
             if (this.currentList.user == null) {
-                path += emailToKey(this.getEmail())
+                path += stringToKey(this.getEmail())
             } else {
-                path += emailToKey(this.currentList.user.email)
+                path += stringToKey(this.currentList.user.email)
             }
-            path += '/lists/' + this.currentList.name
+            path += '/lists/' + stringToKey(this.currentList.name)
             var newItem = new ListItem(new User(vm.getEmail(), vm.first), name, priority)
             firebase.database().ref(path).once('value').then(function (snapshot) {
                 var items = snapshot.val().items
-                if (items === 'empty' || items === null) {
+                if (items === 'empty' || items == null) {
                     vm.currentList.items = [newItem]
                     firebase.database().ref(path).update({
-                        items: [newItem]
+                        items: vm.formatItems([newItem], true)
                     })
                 } else {
-                    console.log(items)
-                    vm.currentList.items = items
-                    vm.currentList.items.push(newItem)
-                    firebase.database().ref(path + '/items').set(vm.currentList.items)
+                    delete newItem.key
+                    delete newItem.user.key
+                    items.push(newItem)
+                    firebase.database().ref(path + '/items').set(items)
+                    vm.currentList.items = vm.formatItems(items, false)
                 }
+                vm.error = ''
+            }).catch(function() {
+                cm.error = ''
             })
         },
         sendInvite: function (email, name) {
-            console.log(emailToKey(email))
-
-            var path = 'users/' + emailToKey(email)
+            var path = 'users/' + stringToKey(email)
             firebase.database().ref(path + '/name').once('value').then(function (snapshot) {
                 if (snapshot.val() === null) {
                     vm.error = 'user not found'
                     return
                 }
-                firebase.database().ref(path + '/invites/' + emailToKey(vm.getEmail()) + '/' + name).update({
+                firebase.database().ref(path + '/invites/' + stringToKey(vm.getEmail()) + '/' + stringToKey(name)).update({
                     first: vm.first,
-                    email: vm.getEmail()
+                    email: vm.getEmail(),
+                    name: name
                 }).then(function () {
                     vm.message = 'invite sent!'
                 }).catch(function () {
@@ -437,26 +494,48 @@ var vm = new Vue({
             })
         },
         acceptInvite: function (invite) {
-            var path = 'users/' + emailToKey(this.getEmail()) + '/shared/' + emailToKey(invite.userFrom.email) + '/' + invite.listName
+            var path = 'users/' + stringToKey(this.getEmail()) + '/shared/' + stringToKey(invite.userFrom.email) + '/' + stringToKey(invite.listName)
             firebase.database().ref(path).update({
                 first: invite.userFrom.first,
                 email: invite.userFrom.email,
                 name: invite.listName
-            }).then(function() {
+            }).then(function () {
                 vm.removeInvite(invite)
                 vm.message = 'invite accepted'
                 vm.error = ''
-            }).catch(function() {
+            }).catch(function () {
                 vm.message = ''
                 vm.error = 'invite could not be accepted'
             })
         },
         removeInvite: function (invite) {
-            var path = 'users/' + emailToKey(this.getEmail()) + '/invites/' + emailToKey(invite.userFrom.email) + '/' + invite.listName
-            firebase.database().ref(path).remove().then(function() {
+            var path = 'users/' + stringToKey(this.getEmail()) + '/invites/' + stringToKey(invite.userFrom.email) + '/' + stringToKey(invite.listName)
+            firebase.database().ref(path).remove().then(function () {
                 vm.error = ''
                 vm.setInvites()
             })
+        },
+        formatItems: function (items, db) {
+            var formattedItems = []
+            for (key in items) {
+                var item = items[key]
+                formattedItems.push(new ListItem(new User(item.user.email, item.user.first, db), item.name, item.priority, db))
+            }
+            return formattedItems
+        },
+        formattedDate: function () {
+            var today = new Date()
+            var dd = today.getDate()
+            var mm = today.getMonth() + 1
+
+            var yyyy = today.getFullYear()
+            if (dd < 10) {
+                dd = '0' + dd
+            }
+            if (mm < 10) {
+                mm = '0' + mm
+            }
+            return mm + '-' + dd + '-' + yyyy
         }
     },
     computed: {
@@ -494,37 +573,42 @@ var vm = new Vue({
     }
 })
 
-function List(user, name, items, priority) {
+function List(user, name, items, priority, db) {
     this.user = user
     this.name = name
     this.items = items
-    this.priority = priority
-    this.key = vm.getKey()
+    if (priority !== true) {
+        this.priority = false
+    } else {
+        this.priority = priority
+    }
+    if (db !== true) this.key = vm.getKey()
 }
 
-function ListItem(user, name, priority) {
+function ListItem(user, name, priority, db) {
     this.user = user
     this.name = name
-    this.priority = priority
-    this.key = vm.getKey()
+    if (priority == null) {
+        this.priority = 0
+    } else {
+        this.priority = priority
+    }
+    if (db !== true) this.key = vm.getKey()
 }
 
-function User(email, first) {
+function User(email, first, db) {
     this.email = email
     this.first = first
-    this.key = vm.getKey()
+    if (db !== true) this.key = vm.getKey()
 }
 
-function Invite(userFrom, listName) {
+function Invite(userFrom, listName, db) {
     this.userFrom = userFrom
     this.listName = listName
-    this.key = vm.getKey()
+    if (db !== true) this.key = vm.getKey()
 }
 
-function emailToKey(email) {
-    return email.replace(/[.]/g, '%20');
-}
-
-function keyToEmail(key) {
-    return key.replace(/(%20)/g, '.');
+function stringToKey(email) {
+    var mod = email.replace(/[.]/g, '%20')
+    return mod.replace(/[/]/g, '%21')
 }

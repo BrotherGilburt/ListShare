@@ -28,7 +28,7 @@
                             <label for="signup-email">email: </label>
                         </td>
                         <td>
-                            <input v-model="email" type="email" id="signup-email">
+                            <input v-model="email" type="email" id="signup-email" placeholder="email">
                         </td>
                     </tr>
                     <tr>
@@ -36,7 +36,7 @@
                             <label for="signup-first">first name: </label>
                         </td>
                         <td>
-                            <input v-model="first" type="text" id="signup-first">
+                            <input v-model="first" type="text" id="signup-first" placeholder="first name">
                         </td>
                     </tr>
                     <tr>
@@ -44,7 +44,7 @@
                             <label for="signup-last">last name: </label>
                         </td>
                         <td>
-                            <input v-model="last" type="text" id="signup-last">
+                            <input v-model="last" type="text" id="signup-last" placeholder="last name">
                         </td>
                     </tr>
                     <tr>
@@ -52,7 +52,7 @@
                             <label for="signup-password">password: </label>
                         </td>
                         <td>
-                            <input v-model="password" type="password" id="signup-password">
+                            <input v-model="password" type="password" id="signup-password" placeholder="password">
                         </td>
                     </tr>
                     <tr>
@@ -60,7 +60,7 @@
                             <label for="signup-confirm">confirm password: </label>
                         </td>
                         <td>
-                            <input v-model="confirm" type="password" id="signup-confirm">
+                            <input v-model="confirm" type="password" id="signup-confirm" placeholder="confirm password">
                         </td>
                     </tr>
                     <tr>
@@ -86,7 +86,7 @@
                             <label for="signin-email">email:</label>
                         </td>
                         <td>
-                            <input v-model="email" type="email" id="signin-email">
+                            <input v-model="email" type="email" id="signin-email" placeholder="email">
                         </td>
                     </tr>
                     <tr>
@@ -94,7 +94,7 @@
                             <label for="signin-password">password:</label>
                         </td>
                         <td>
-                            <input v-model="password" type="password" id="signin-password">
+                            <input v-model="password" type="password" id="signin-password" placeholder="password">
                         </td>
                     </tr>
                     <tr>
@@ -114,11 +114,8 @@
             <create-list-page inline-template v-if="page === 'create' && auth === true">
                 <table class="input_table">
                     <tr>
-                        <td>
-                            <label for="create-name">list name:</label>
-                        </td>
-                        <td>
-                            <input v-model="name" type="text" id="create-name">
+                        <td colspan="2">
+                            <input v-model="name" type="text" id="create-name" placeholder="list name">
                         </td>
                     </tr>
                     <tr>
@@ -126,6 +123,16 @@
                             <select v-model="priority">
                                 <option value="false">unordered list</option>
                                 <option value="true">priority list</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <select v-model="copy">
+                                <option value="">do not copy a list</option>
+                                <option v-for="list in lists" v-bind:value="list">copy "{{list.name}}"</option>
+                                <option v-if="isShared" disabled value="">shared lists:</option>
+                                <option v-for="sharedList in sharedLists" v-bind:value="sharedList">copy "{{sharedList.name}}" by {{sharedList.user.first}}</option>
                             </select>
                         </td>
                     </tr>
@@ -224,6 +231,7 @@
                         </td>
                         <td>
                             <button v-on:click="accept(invite)">accept</button>
+                            <button v-on:click="decline(invite)">decline</button>
                         </td>
                     </tr>
                     <tr>
@@ -244,14 +252,16 @@
                 <table class="input_table">
                     <tr>
                         <td>
-                            <button v-on:click="goToCreate()">create List</button>
+                            <button v-on:click="goToCreate()">create list</button>
                         </td>
                     </tr>
                     <tr>
                         <td>
                             <select v-model="currentList">
                                 <option value="" disabled>select a list</option>
-                                <option v-for="list in lists" v-bind:value="list">{{list.name}}</option>
+                                <option v-for="list in lists" v-bind:value="list">"{{list.name}}"</option>
+                                <option v-if="isShared" disabled value="">shared lists:</option>
+                                <option v-for="sharedList in sharedLists" v-bind:value="sharedList">"{{sharedList.name}}" by {{sharedList.user.first}}</option>
                             </select>
                         </td>
                     </tr>
@@ -279,7 +289,7 @@
             </main-menu-page>
         </main>
         <footer>
-            <span>copyright Perry 2017</span>
+            <span>created by perry in fall of 2017 for it354 at ISU</span>
         </footer>
     </div>
 </body>
