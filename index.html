@@ -22,56 +22,40 @@
         <main>
             <!-- SIGN UP -->
             <sign-up-page inline-template v-if="page === 'signup' && auth === false">
-                <table class="input_table">
+                <table>
                     <tr>
-                        <td>
-                            <label for="signup-email">email: </label>
-                        </td>
-                        <td>
+                        <td colspan="2">
                             <input v-model="email" type="email" id="signup-email" placeholder="email">
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <label for="signup-first">first name: </label>
-                        </td>
-                        <td>
+                        <td colspan="2">
                             <input v-model="first" type="text" id="signup-first" placeholder="first name">
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <label for="signup-last">last name: </label>
-                        </td>
-                        <td>
+                        <td colspan="2">
                             <input v-model="last" type="text" id="signup-last" placeholder="last name">
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <label for="signup-password">password: </label>
-                        </td>
-                        <td>
+                        <td colspan="2">
                             <input v-model="password" type="password" id="signup-password" placeholder="password">
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <label for="signup-confirm">confirm password: </label>
-                        </td>
-                        <td>
+                        <td colspan="2">
                             <input v-model="confirm" type="password" id="signup-confirm" placeholder="confirm password">
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <button v-on:click="signUp()">sign Up</button>
+                            <button class="large" v-on:click="signUp()">sign up</button>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <span>I already have an account</span>
-                            <br>
+                            <span class="padding_top">i already have an account</span>
                             <a href="javascript:void(0)" v-on:click="page='default'">sign in</a>
                         </td>
                     </tr>
@@ -80,30 +64,25 @@
 
             <!-- SIGN IN -->
             <sign-in-page inline-template v-else-if="auth === false">
-                <table class="input_table">
+                <table>
                     <tr>
-                        <td>
-                            <label for="signin-email">email:</label>
-                        </td>
-                        <td>
+                        <td colspan="2">
                             <input v-model="email" type="email" id="signin-email" placeholder="email">
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <label for="signin-password">password:</label>
-                        </td>
-                        <td>
+                        <td colspan="2">
                             <input v-model="password" type="password" id="signin-password" placeholder="password">
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <button v-on:click="signIn()">sign in</button>
+                            <button class="large" v-on:click="signIn()">sign in</button>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2">
+                            <span class="padding_top">i don't have an account</span>
                             <a href="javascript:void(0)" v-on:click="page='signup'">create account</a>
                         </td>
                     </tr>
@@ -112,7 +91,7 @@
 
             <!-- CREATE LIST -->
             <create-list-page inline-template v-if="page === 'create' && auth === true">
-                <table class="input_table">
+                <table>
                     <tr>
                         <td colspan="2">
                             <input v-model="name" type="text" id="create-name" placeholder="list name">
@@ -138,7 +117,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <button v-on:click="create()">Create</button>
+                            <button class="large" v-on:click="create()">create</button>
                         </td>
                     </tr>
                     <tr>
@@ -151,15 +130,16 @@
 
             <!-- LIST -->
             <view-list-page inline-template v-else-if="page === 'list' && auth === true">
-                <table class="input_table">
+                <table>
                     <tr>
                         <td colspan="2"><h2>{{listName}}</h2>
                             <span class="by">created by {{listCreator}}</span></td>
                     </tr>
-                    <tr v-for="(item, index) in orderedItems" v-bind:class="{gray: index % 2 == 0}">
-                        <td colspan="2" v-bind:title="item.user.first">
-                            <span>{{item.name}}</span>
-                            <span v-if="currentList.priority === true">({{item.priority}})</span>
+                    <tr class="left" v-for="(item, index) in orderedItems" v-bind:class="{gray: index % 2 == 0}">
+                        <td colspan="2">
+                            <span v-if="isPriority" title="priority">({{item.priority}})</span>
+                            <span title="item">"{{item.name}}"</span>
+                            <span class="italic">added by {{item.user.first}}</span>
                         </td>
                     </tr>
                     <tr v-if="noItems">
@@ -172,14 +152,14 @@
                            <input v-model="name" type="text" placeholder="new item">
                         </td>
                     </tr>
-                    <tr v-if="currentList.priority === true">
+                    <tr v-if="isPriority">
                         <td colspan="2">
-                            <input v-model.number="priority" type="number" min="0" max="10">
+                            <input v-model="priority" type="text" placeholder="item priority">
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <button v-on:click="add">add item</button>
+                            <button class="large" v-on:click="add">add item</button>
                         </td>
                     </tr>
                     <tr>
@@ -192,7 +172,7 @@
 
             <!-- SEND INVITE -->
             <send-invite-page inline-template v-else-if="page === 'sendInvite' && auth === true">
-                <table class="input_table">
+                <table>
                     <tr>
                         <td>
                             <h3>{{listName}}</h3>
@@ -229,12 +209,12 @@
             
             <!-- INVITES -->
             <view-invites-page inline-template v-else-if="page === 'invites' && auth === true">
-                <table class="input_table">
+                <table class="invite_table">
                     <tr v-for="invite in invitesDisplay">
-                        <td v-bind:title="invite.userFrom.email">
-                            <b>{{invite.listName}}</b> from {{invite.userFrom.first}}
+                        <td class="right" v-bind:title="invite.userFrom.email">
+                            <span class="bold">{{invite.listName}}</span> <span class="italic">from {{invite.userFrom.first}}</span>
                         </td>
-                        <td>
+                        <td class="left">
                             <button v-on:click="accept(invite)">accept</button>
                             <button v-on:click="decline(invite)">decline</button>
                         </td>
@@ -257,7 +237,7 @@
 
             <!-- MAIN MENU -->
             <main-menu-page inline-template v-else-if="auth === true">
-                <table class="input_table">
+                <table>
                     <tr>
                         <td>
                             <button class="large" v-on:click="goToCreate()">create list</button>
@@ -297,7 +277,7 @@
             </main-menu-page>
         </main>
         <footer>
-            <span>created by perry in fall of 2017 for it354 at ISU</span>
+            <span class="tiny_message">created by perry kaufman in fall of 2017 for it354 at ISU</span>
         </footer>
     </div>
 </body>

@@ -110,7 +110,7 @@ Vue.component('view-list-page', {
     data: function () {
         return {
             name: '',
-            priority: 0,
+            priority: '',
             row: true
         }
     },
@@ -120,19 +120,23 @@ Vue.component('view-list-page', {
                 vm.error = 'an item name is required'
                 return
             }
-            if (this.priority == '') this.priority = 0
-            if (this.priority < 0 || this.priority > 10 || !Number.isInteger(this.priority)) {
-                vm.error = 'priority must be an integer 0-10'
+            if (this.isPriority && this.priority === '') {
+                vm.error = 'priority is required'
                 return
             }
             vm.addToCurrentList(this.name, this.priority)
             this.name = ''
+            this.priority = ''
         }
     },
     computed: {
         listName: function () {
             if (vm.currentList == null || vm.currentList === '') return 'N/A'
             return vm.currentList.name
+        },
+        isPriority: function() {
+            if (vm.currentList != null && vm.currentList.priority != null && vm.currentList.priority === true) return true
+            return false
         },
         listCreator: function () {
             if (vm.currentList.user == null) {
@@ -317,13 +321,15 @@ var vm = new Vue({
                     })
                     vm.first = first
                     vm.last = last
-                    console.log('sign up success! ' + firebase.auth().currentUser.email)
+                    firebase.auth().currentUser.sendEmailVerification()
                 }).catch(function (error) {
                     vm.error = error.message
                 })
         },
         signOutUser: function () {
             firebase.auth().signOut()
+            vm.error = ''
+            vm.message = ''
         },
         updateState: function () {
             this.setLists()
@@ -458,7 +464,26 @@ var vm = new Vue({
             })
         },
         addToCurrentList: function (name, priority) {            
+            console.log(priority)
+            if (priority === '') {
+                priority = 0
+            } else if (isInteger(priority)){
+                priority = parseInt(priority)
+            }
+            else {
+                this.error = 'priority must be an integer'
+                return
+            }
+            if (priority < 0 || priority > 10) {
+                this.error = 'priority must be a number 0-10'
+                return
+            }
+
             var path = 'users/'
+            if (name.indexOf('"') > -1) {
+                vm.error = "quotation marks not allowed"
+                return
+            }
             if (this.currentList.user == null) {
                 path += stringToKey(this.getEmail())
             } else {
@@ -482,7 +507,7 @@ var vm = new Vue({
                 }
                 vm.error = ''
             }).catch(function() {
-                cm.error = ''
+                vm.error = 'item could not be added'
             })
         },
         sendInvite: function (email, name) {
@@ -498,8 +523,10 @@ var vm = new Vue({
                     name: name
                 }).then(function () {
                     vm.message = 'invite sent!'
+                    vm.error = ''
                 }).catch(function () {
                     vm.error = 'invite could not be sent'
+                    vm.message = ''
                 })
             }).catch(function () {
                 vm.error = 'user not found'
@@ -623,4 +650,29 @@ function Invite(userFrom, listName, db) {
 function stringToKey(email) {
     var mod = email.replace(/[.]/g, '%20')
     return mod.replace(/[/]/g, '%21')
+}
+
+function isInteger(string) {
+    var allowed = '0123456789'
+    var first = true
+    for(char in string) {
+        var match = false
+        var currentChar = string[char]
+        if (first && currentChar === '-') {
+            first = false
+            continue
+        } else {
+            first = false
+        }
+        for (num in allowed) {
+            var currentNum = allowed[num]
+            if (currentNum === currentChar) {
+                match = true
+                continue
+            }
+        }
+        if (match === false) return false
+    }
+
+    return true
 }

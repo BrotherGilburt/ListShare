@@ -1,3 +1,9 @@
+html,
+body {
+    padding: 0;
+    margin: 0;
+}
+
 body {
     font-size: 20px;
     font-family: sans-serif;
@@ -5,7 +11,8 @@ body {
     text-align: center;
 }
 
-header, footer {
+header,
+footer {
     background-color: rgb(228, 228, 228);
     padding: 5px
 }
@@ -38,6 +45,15 @@ select {
     border: 1px solid darkblue;
 }
 
+table {
+    width: 90%;
+    margin: auto;
+}
+
+td {
+    padding: 5px 10px;
+}
+
 input {
     width: 80%;
     font: inherit;
@@ -47,27 +63,23 @@ input {
 }
 
 button {
+    min-width: 86px;
     font: inherit;
     background-color: lightblue;
     border-radius: 5px;
     border-style: none;
     padding: 10px;
-    margin: 1px;
+    margin: 4px;
 }
 
 button:hover {
-    margin: 0;
+    margin: 3px;
     border: 1px solid darkblue;
-}
-
-.large {
-    width: 200px;
-    font-size: 24px
 }
 
 a {
     display: inline-block;
-    padding: 10px;
+    padding: 10px 30px;
     font-size: 24px;
     color: darkblue;
 }
@@ -75,21 +87,17 @@ a {
 .center_section {
     background-color: white;
     margin: auto;
-    max-width: 600px;
-    padding: 10px;
+    width: 60%;
+    max-width: 1000px;
+}
+
+.large {
+    width: 200px;
+    font-size: 24px
 }
 
 .error_message {
     color: red;
-}
-
-.input_table {
-    width: 90%;
-    margin: auto;
-}
-
-.input_table td {
-    padding: 5px;
 }
 
 .gray {
@@ -106,7 +114,56 @@ a {
     font-style: italic;
 }
 
+.italic {
+    font-style: italic;
+}
+
+.bold {
+    font-weight: bold;
+}
+
 .by {
     font-style: italic;
     margin-bottom: 10px;
+}
+
+.tiny_message {
+    font-size: 16px;
+    font-style: italic;
+}
+
+.left {
+    text-align: left;
+}
+
+.right {
+    text-align: right;
+}
+
+.padding_top {
+    display: block;
+    padding-top: 25px;
+}
+
+@media screen and (min-width: 600px) {
+    input {
+        width: 400px;
+    }
+    select {
+        width: 400px;
+    }
+    table {
+        width: 400px;
+    }
+
+    .invite_table {
+        width: 90%;
+    }
+}
+
+@media screen and (max-width: 750px) {
+    .center_section {
+        width: 100%;
+        min-width: 200px;
+    }
 }
