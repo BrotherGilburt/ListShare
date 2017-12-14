@@ -153,13 +153,18 @@
             <view-list-page inline-template v-else-if="page === 'list' && auth === true">
                 <table class="input_table">
                     <tr>
-                        <td colspan="2"><h3>{{listName}}</h3>
-                            <span>created by {{listCreator}}</span></td>
+                        <td colspan="2"><h2>{{listName}}</h2>
+                            <span class="by">created by {{listCreator}}</span></td>
                     </tr>
-                    <tr v-for="item in orderedItems">
+                    <tr v-for="(item, index) in orderedItems" v-bind:class="{gray: index % 2 == 0}">
                         <td colspan="2" v-bind:title="item.user.first">
-                            <span v-if="currentList.priority === true">{{item.priority}}</span>
                             <span>{{item.name}}</span>
+                            <span v-if="currentList.priority === true">({{item.priority}})</span>
+                        </td>
+                    </tr>
+                    <tr v-if="noItems">
+                        <td colspan="2">
+                            <span class="empty">list is empty</span>
                         </td>
                     </tr>
                     <tr>
@@ -191,12 +196,12 @@
                     <tr>
                         <td>
                             <h3>{{listName}}</h3>
-                            <span>created by you</span>
+                            <span class="by">created by you</span>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <span>Enter an email to invite to this list</span>
+                            <span>enter an email to invite</span>
                         </td>
                     </tr>
                     <tr>
@@ -206,12 +211,12 @@
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="send()">send</button>
+                            <button class="large" v-on:click="send()">send</button>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <span>{{message}}</span>
+                            <span class="message">{{message}}</span>
                         </td>
                     </tr>
                     <tr>
@@ -235,8 +240,11 @@
                         </td>
                     </tr>
                     <tr>
+                        <td v-if="!isInvites" colspan="2"><span class="empty">you have no invites</span></td>
+                    </tr>
+                    <tr v-if="message != ''">
                         <td>
-                            <span>{{message}}</span>
+                            <span class="message">{{message}}</span>
                         </td>
                     </tr>
                     <tr>
@@ -252,7 +260,7 @@
                 <table class="input_table">
                     <tr>
                         <td>
-                            <button v-on:click="goToCreate()">create list</button>
+                            <button class="large" v-on:click="goToCreate()">create list</button>
                         </td>
                     </tr>
                     <tr>
@@ -267,17 +275,17 @@
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="goToList()">view list</button>
+                            <button class="large" v-on:click="goToList()">view list</button>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="goToSendInvite()">invite to list</button>
+                            <button class="large" v-on:click="goToSendInvite()">invite to list</button>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <button v-on:click="goToInvites()">see Invites ({{invitesSize}})</button>
+                            <button class="large" v-on:click="goToInvites()">see invites ({{invitesSize}})</button>
                         </td>
                     </tr>
                     <tr>

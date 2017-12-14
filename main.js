@@ -110,7 +110,8 @@ Vue.component('view-list-page', {
     data: function () {
         return {
             name: '',
-            priority: 0
+            priority: 0,
+            row: true
         }
     },
     methods: {
@@ -119,10 +120,14 @@ Vue.component('view-list-page', {
                 vm.error = 'an item name is required'
                 return
             }
-            if (this.priority == '' || this.priority < 0 || this.priority > 10) this.priority = 0
+            if (this.priority == '') this.priority = 0
+            if (this.priority < 0 || this.priority > 10 || !Number.isInteger(this.priority)) {
+                vm.error = 'priority must be an integer 0-10'
+                return
+            }
             vm.addToCurrentList(this.name, this.priority)
             this.name = ''
-        },
+        }
     },
     computed: {
         listName: function () {
@@ -142,6 +147,10 @@ Vue.component('view-list-page', {
                 })
             }
             return vm.currentList.items
+        },
+        noItems: function() {
+            if (vm.currentList.items == null) return false
+            return vm.currentList.items.length == 0
         }
     },
     mounted: function () {
@@ -216,6 +225,9 @@ Vue.component('view-invites-page', {
     computed: {
         invitesDisplay: function () {
             return vm.invites
+        },
+        isInvites: function () {
+            return !(vm.invites.length == 0)
         }
     },
     mounted: function () {

@@ -10,11 +10,19 @@ header, footer {
     padding: 5px
 }
 
+main {
+    padding: 20px 0
+}
+
 label {
     font-weight: bold;
 }
 
 h1 {
+    margin: 0;
+}
+
+h2 {
     margin: 0;
 }
 
@@ -43,13 +51,18 @@ button {
     background-color: lightblue;
     border-radius: 5px;
     border-style: none;
-    padding: 5px 10px;
+    padding: 10px;
     margin: 1px;
 }
 
 button:hover {
     margin: 0;
     border: 1px solid darkblue;
+}
+
+.large {
+    width: 200px;
+    font-size: 24px
 }
 
 a {
@@ -71,9 +84,29 @@ a {
 }
 
 .input_table {
+    width: 90%;
     margin: auto;
 }
 
 .input_table td {
     padding: 5px;
+}
+
+.gray {
+    background-color: rgb(231, 231, 231)
+}
+
+.message {
+    font-size: 24px;
+    color: darkgreen;
+}
+
+.empty {
+    font-size: 24px;
+    font-style: italic;
+}
+
+.by {
+    font-style: italic;
+    margin-bottom: 10px;
 }
